@@ -826,7 +826,10 @@ async function compileMountGuard(
   const relevantMounts: string[] = [];
   const protectedMounts: string[] = [];
 
-  for (const canonicalMount of await canonicalizeExistingPaths(mountPoints)) {
+  for (const canonicalMount of await canonicalizeExistingPaths(
+    mountPoints,
+    allowedEntries.map((entry) => entry.path)
+  )) {
     if (!allowedEntries.some((entry) => pathIsWithin(entry.path, canonicalMount))) continue;
     relevantMounts.push(canonicalMount);
     const explicitlyGranted = allowedEntries.some((entry) => entry.path === canonicalMount);

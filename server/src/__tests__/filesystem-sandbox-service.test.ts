@@ -15,6 +15,7 @@ import {
 } from '../services/filesystem-sandbox-service.js';
 import {
   inspectGitMetadataRoots,
+  canonicalizeExistingPaths,
   removeRunSandboxDirectory,
   runSandboxDirectories,
 } from '../utils/filesystem-sandbox-runtime.js';
@@ -24,8 +25,56 @@ const SHA = `sha256:${'a'.repeat(64)}`;
 
 afterEach(async () => {
   resetFilesystemSandboxServiceForTests();
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
   await Promise.all(roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true })));
+});
+
+describe('inaccessible host mount boundaries', () => {
+  it('ignores only mounts under a canonical ancestor disjoint from granted roots', async () => {
+    const test = await fixture();
+    const inaccessible = path.join(test.outside, 'namespace');
+    const original = fs.realpath.bind(fs);
+    vi.spyOn(fs, 'realpath').mockImplementation(async (value) => {
+      if (value === inaccessible) throw Object.assign(new Error('denied'), { code: 'EACCES' });
+      return original(value);
+    });
+    await expect(canonicalizeExistingPaths([inaccessible], [test.workspace])).resolves.toEqual([]);
+    await expect(canonicalizeExistingPaths([inaccessible])).rejects.toMatchObject({
+      code: 'EACCES',
+    });
+  });
+
+  it('fails closed on inaccessible mounts inside a granted root or an ambiguous ancestor', async () => {
+    const test = await fixture();
+    const inaccessible = path.join(test.workspace, 'namespace');
+    const original = fs.realpath.bind(fs);
+    vi.spyOn(fs, 'realpath').mockImplementation(async (value) => {
+      if (value === inaccessible) throw Object.assign(new Error('denied'), { code: 'EACCES' });
+      return original(value);
+    });
+    await expect(canonicalizeExistingPaths([inaccessible], [test.workspace])).rejects.toMatchObject(
+      { code: 'EACCES' }
+    );
+    await expect(
+      canonicalizeExistingPaths([inaccessible], [path.join(test.workspace, 'child')])
+    ).rejects.toMatchObject({ code: 'EACCES' });
+  });
+
+  it('resolves ancestor aliases before classifying an inaccessible mount as unrelated', async () => {
+    const test = await fixture();
+    const alias = path.join(test.root, 'workspace-alias');
+    await fs.symlink(test.workspace, alias);
+    const inaccessible = path.join(alias, 'namespace');
+    const original = fs.realpath.bind(fs);
+    vi.spyOn(fs, 'realpath').mockImplementation(async (value) => {
+      if (value === inaccessible) throw Object.assign(new Error('denied'), { code: 'EACCES' });
+      return original(value);
+    });
+    await expect(canonicalizeExistingPaths([inaccessible], [test.workspace])).rejects.toMatchObject(
+      { code: 'EACCES' }
+    );
+  });
 });
 
 function preset(overrides: Partial<SandboxPolicyPreset> = {}): SandboxPolicyPreset {

@@ -289,13 +289,52 @@ export async function inspectGitMetadataRoots(workspacePath: string): Promise<st
   return [...new Set(metadataRoots)].sort();
 }
 
-export async function canonicalizeExistingPaths(values: string[]): Promise<string[]> {
+export async function canonicalizeExistingPaths(
+  values: string[],
+  containedRoots: string[] = []
+): Promise<string[]> {
   const canonical = await Promise.all(
     values
       .filter((value) => path.isAbsolute(value))
-      .map((value) => fs.realpath(path.resolve(value)))
+      .map(async (value) => {
+        try {
+          return await fs.realpath(path.resolve(value));
+        } catch (error) {
+          if (!isPermissionError(error) || containedRoots.length === 0) throw error;
+          // Host mounts may be inaccessible to this user (for example Docker's
+          // network namespaces). Ignore one only when its nearest inspectable
+          // canonical ancestor is disjoint from every granted policy root.
+          // Inside-root and ambiguous ancestors still fail closed; symlinked
+          // ancestors are resolved before making this decision.
+          let ancestor = path.dirname(path.resolve(value));
+          for (;;) {
+            let resolved: string;
+            try {
+              resolved = await fs.realpath(ancestor);
+            } catch (ancestorError) {
+              if (!isPermissionError(ancestorError)) throw ancestorError;
+              const parent = path.dirname(ancestor);
+              if (parent === ancestor) throw error;
+              ancestor = parent;
+              continue;
+            }
+            if (
+              containedRoots.some(
+                (root) => pathIsWithin(root, resolved) || pathIsWithin(resolved, root)
+              )
+            ) {
+              throw error;
+            }
+            return undefined;
+          }
+        }
+      })
   );
-  return [...new Set(canonical)].sort();
+  return [...new Set(canonical.filter((value): value is string => value !== undefined))].sort();
+}
+
+function isPermissionError(error: unknown): boolean {
+  return ['EACCES', 'EPERM'].includes((error as NodeJS.ErrnoException | undefined)?.code ?? '');
 }
 
 export async function assertNoExternalHardLinksRuntime(input: {
