@@ -245,6 +245,7 @@ import {
   CodexAppServerRpcClient,
   parseCodexAppServerLine,
   type CodexAppServerClassification,
+  type CodexAppServerInbound,
   type CodexAppServerTerminalResult,
   type CodexAppServerUsage,
 } from './codex-app-server-adapter.js';
@@ -5675,24 +5676,29 @@ export class ClawdbotAgentService {
       throw new Error('Codex app-server runtime budget exceeds the supported timer range.');
     }
 
+    const failEventProcessing = (error: unknown) => {
+      if (eventProcessingError) return;
+      eventProcessingError =
+        error instanceof Error ? error : new Error('Provider event ingestion failed closed.');
+      void approvalBroker
+        .cancelAttempt('local', task.id, attemptId, 'Codex app-server event ingestion failed.')
+        .catch((cancelError) => {
+          log.warn(
+            { err: cancelError, taskId: task.id, attemptId },
+            'Failed to cancel Codex app-server approvals after event ingestion failure'
+          );
+        });
+      rpcClient.close(eventProcessingError);
+      child.kill('SIGTERM');
+    };
+
     const enqueueEventProcessing = (work: () => Promise<void>) => {
       eventProcessing = eventProcessing.then(async () => {
         if (eventProcessingError) return;
         try {
           await work();
         } catch (error) {
-          eventProcessingError =
-            error instanceof Error ? error : new Error('Provider event ingestion failed closed.');
-          void approvalBroker
-            .cancelAttempt('local', task.id, attemptId, 'Codex app-server event ingestion failed.')
-            .catch((cancelError) => {
-              log.warn(
-                { err: cancelError, taskId: task.id, attemptId },
-                'Failed to cancel Codex app-server approvals after event ingestion failure'
-              );
-            });
-          rpcClient.close(eventProcessingError);
-          child.kill('SIGTERM');
+          failEventProcessing(error);
         }
       });
     };
@@ -5894,9 +5900,7 @@ export class ClawdbotAgentService {
       },
     };
 
-    const processLine = async (line: string) => {
-      const record = parseCodexAppServerLine(line);
-      const inbound = await rpcClient.acceptRecord(record);
+    const processRecord = async (inbound: CodexAppServerInbound) => {
       if (inbound.kind === 'response') return;
       if (inbound.kind === 'server-request') {
         const brokerRequest = classifyCodexAppServerServerRequest(inbound.record);
@@ -6030,6 +6034,10 @@ export class ClawdbotAgentService {
           'stdout',
           chunk
         );
+      });
+      // Correlate validated RPC replies on receipt. Durable notification work
+      // can await disk writes or operator controls and must not delay their ACKs.
+      try {
         stdoutBuffer += chunk;
         const lines = stdoutBuffer.split(/\r?\n/);
         stdoutBuffer = lines.pop() || '';
@@ -6037,9 +6045,19 @@ export class ClawdbotAgentService {
           throw new Error('Codex app-server record exceeded the 4 MiB safety limit.');
         }
         for (const line of lines) {
-          if (line.trim()) await processLine(line);
+          if (!line.trim()) continue;
+          void rpcClient
+            .acceptRecord(parseCodexAppServerLine(line))
+            .then((inbound) => {
+              if (inbound.kind !== 'response') {
+                enqueueEventProcessing(() => processRecord(inbound));
+              }
+            })
+            .catch(failEventProcessing);
         }
-      });
+      } catch (error) {
+        failEventProcessing(error);
+      }
     });
 
     child.stderr.setEncoding('utf-8');
@@ -6218,7 +6236,9 @@ export class ClawdbotAgentService {
         await eventProcessing;
         if (stdoutBuffer.trim() && !eventProcessingError) {
           try {
-            await processLine(stdoutBuffer);
+            await processRecord(
+              await rpcClient.acceptRecord(parseCodexAppServerLine(stdoutBuffer))
+            );
           } catch (error) {
             eventProcessingError =
               error instanceof Error

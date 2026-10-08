@@ -1856,6 +1856,94 @@ describe('ClawdbotAgentService Codex providers', () => {
     }
   );
 
+  it('acknowledges app-server steering while notification persistence is blocked', async () => {
+    const received: Array<Record<string, unknown>> = [];
+    const child = createFakeCodexAppServerChild(received, { holdTurnOpen: true });
+    mockSpawn.mockReturnValue(child);
+    mockGetConfig.mockResolvedValue({
+      agents: [
+        {
+          type: 'codex-app-server',
+          name: 'Codex app-server',
+          command: 'codex',
+          args: [],
+          enabled: true,
+          provider: 'codex-app-server',
+        },
+      ],
+    });
+    mockCheckAgent.mockImplementation(async (agent: AgentConfig) => ({
+      type: agent.type,
+      name: agent.name,
+      enabled: true,
+      configured: true,
+      command: agent.command,
+      executableFound: true,
+      providerVersion: 'codex-cli 0.162.0',
+      authenticated: true,
+      healthy: true,
+      checkedAt: '2026-10-08T00:00:00.000Z',
+    }));
+    const service = testableService(tmpDir);
+    const status = await service.startAgent(task.id, 'codex-app-server');
+    await waitFor(() => {
+      expect(mockPatchTaskAttempt).toHaveBeenCalledWith(
+        task.id,
+        status.attemptId,
+        expect.objectContaining({
+          conversation: expect.objectContaining({
+            currentTurnId: 'turn-app-server-fixture',
+          }),
+        })
+      );
+    });
+
+    let release!: () => void;
+    const blocked = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let persisting = false;
+    mockLogActivity.mockImplementation(async (_type, _id, _title, details) => {
+      if (details?.eventType === 'item/agentMessage/delta') {
+        persisting = true;
+        await blocked;
+      }
+    });
+    child.stdout.write(
+      `${JSON.stringify({
+        method: 'item/agentMessage/delta',
+        params: {
+          threadId: 'thread-app-server-fixture',
+          turnId: 'turn-app-server-fixture',
+          itemId: 'message-app-server-fixture',
+          delta: 'Streaming output',
+        },
+      })}\n`
+    );
+    await waitFor(() => {
+      expect(persisting).toBe(true);
+    });
+    let acknowledged = false;
+    const steering = service
+      .sendMessage(task.id, 'Check one fresh observation.', {
+        expectedAttemptId: status.attemptId,
+        actor: 'operator',
+      })
+      .then(() => {
+        acknowledged = true;
+      });
+    try {
+      await waitFor(() => {
+        expect(acknowledged).toBe(true);
+      });
+      expect(received.some(({ method }) => method === 'turn/steer')).toBe(true);
+    } finally {
+      release();
+      await steering;
+      await service.stopAgent(task.id, status.attemptId);
+    }
+  });
+
   it('captures workspace boundaries before launch, steering, and compaction', async () => {
     const received: Array<Record<string, unknown>> = [];
     const child = createFakeCodexAppServerChild(received, { holdTurnOpen: true });
