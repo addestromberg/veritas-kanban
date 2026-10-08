@@ -647,7 +647,7 @@ function createFakeCodexAppServerChild(
               codexHome: '/tmp/codex-home',
               platformFamily: 'unix',
               platformOs: 'macos',
-              userAgent: 'codex-cli 0.145.0',
+              userAgent: 'codex-cli 0.162.0',
             },
           })}\n`
         );
@@ -663,13 +663,14 @@ function createFakeCodexAppServerChild(
               modelProvider: 'openai',
               sandbox: { type: 'workspaceWrite', networkAccess: false, writableRoots: [] },
               thread: {
-                cliVersion: '0.145.0',
+                cliVersion: '0.162.0',
                 createdAt: 1,
                 cwd: tmpPath(request, 'params', 'cwd'),
                 ephemeral: false,
                 id: 'thread-app-server-fixture',
                 modelProvider: 'openai',
                 preview: 'fixture',
+                projectId: null,
                 sessionId: 'thread-app-server-fixture',
                 source: 'appServer',
                 status: { type: 'idle' },
@@ -731,13 +732,14 @@ function createFakeCodexAppServerChild(
               modelProvider: 'openai',
               sandbox: { type: 'workspaceWrite', networkAccess: false, writableRoots: [] },
               thread: {
-                cliVersion: '0.145.0',
+                cliVersion: '0.162.0',
                 createdAt: 2,
                 cwd: tmpPath(request, 'params', 'cwd'),
                 ephemeral: false,
                 id: 'thread-app-server-rewind',
                 modelProvider: 'openai',
                 preview: 'rewind fixture',
+                projectId: null,
                 sessionId: 'thread-app-server-rewind',
                 source: 'appServer',
                 status: { type: 'idle' },
@@ -1770,7 +1772,7 @@ describe('ClawdbotAgentService Codex providers', () => {
         command: agent.command,
         executableFound: true,
         executablePath: '/opt/homebrew/bin/codex',
-        providerVersion: 'codex-cli 0.145.0',
+        providerVersion: 'codex-cli 0.162.0',
         providerVersionSource: 'codex --version',
         authenticated: true,
         healthy: true,
@@ -1783,9 +1785,9 @@ describe('ClawdbotAgentService Codex providers', () => {
       expect(status.provider).toBe('codex-app-server');
       expect(status.providerRuntimeManifest).toMatchObject({
         provider: 'codex-app-server',
-        providerVersion: 'codex-cli 0.145.0',
+        providerVersion: 'codex-cli 0.162.0',
         providerBuild: expect.stringContaining(
-          'openai/codex@25af12f7e61572b0bc18ddb1008be543b91519b0'
+          'openai/codex@c1382380de69521303b416720a52f42d51af6248'
         ),
         protocolVersion: 'codex-app-server-jsonrpc/v2',
       });
@@ -1879,7 +1881,7 @@ describe('ClawdbotAgentService Codex providers', () => {
       command: agent.command,
       executableFound: true,
       executablePath: '/opt/homebrew/bin/codex',
-      providerVersion: 'codex-cli 0.145.0',
+      providerVersion: 'codex-cli 0.162.0',
       providerVersionSource: 'codex --version',
       authenticated: true,
       healthy: true,
@@ -1975,7 +1977,7 @@ describe('ClawdbotAgentService Codex providers', () => {
       command: agent.command,
       executableFound: true,
       executablePath: '/opt/homebrew/bin/codex',
-      providerVersion: 'codex-cli 0.145.0',
+      providerVersion: 'codex-cli 0.162.0',
       providerVersionSource: 'codex --version',
       authenticated: true,
       healthy: true,
@@ -2090,7 +2092,7 @@ describe('ClawdbotAgentService Codex providers', () => {
         command: agent.command,
         executableFound: true,
         executablePath: '/opt/homebrew/bin/codex',
-        providerVersion: 'codex-cli 0.145.0',
+        providerVersion: 'codex-cli 0.162.0',
         providerVersionSource: 'codex --version',
         authenticated: true,
         healthy: true,
@@ -2731,7 +2733,7 @@ describe('ClawdbotAgentService Codex providers', () => {
       command: agent.command,
       executableFound: true,
       executablePath: '/opt/homebrew/bin/codex',
-      providerVersion: 'codex-cli 0.145.0',
+      providerVersion: 'codex-cli 0.162.0',
       providerVersionSource: 'codex --version',
       authenticated: true,
       healthy: true,

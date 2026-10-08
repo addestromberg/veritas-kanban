@@ -18,7 +18,7 @@ provider version/build, runtime-manifest digest, and failure class.
 | ------------------ | ------------------------- | ----------------------------------------------------------------------------------- | ---------------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
 | Buzz               | `buzz-agent`              | Buzz v0.4.24, commit `710ed9fff57878a1d69f809b80a6ee0416c53fc4`; `buzz-agent 0.1.0` | ACP v1 stdio           | Open source            | Task execution uses `buzz-agent`; relay, identity, community, and workflow checks remain separate. |
 | Grok Build         | `grok-build`              | v0.2.111, build `94172f2aa4e5`                                                      | ACP v1 stdio           | Partial source lineage | The released artifact self-reports alpha and is not fully traceable to the public source tree.     |
-| OpenAI Codex       | `openai-codex-app-server` | `codex-cli 0.145.0`                                                                 | app-server JSON-RPC v2 | Open source            | Experimental methods remain excluded until pinned schemas and behavior are reviewed.               |
+| OpenAI Codex       | `openai-codex-app-server` | `codex-cli 0.162.0`                                                                 | app-server JSON-RPC v2 | Open source            | Experimental methods remain excluded until pinned schemas and behavior are reviewed.               |
 | Claude Code        | `claude-code`             | `2.1.218 (Claude Code)`                                                             | stream-json process    | Partial source         | The complete CLI implementation is not public; some host enforcement remains provider-dependent.   |
 | GitHub Copilot CLI | `github-copilot-cli`      | v1.0.74, commit `2b809c84e87dbcc88f897cb4f3fb97c43b77af95`                          | ACP v1 stdio           | Partial source         | ACP is public preview and provider-managed authentication has no non-consuming status probe.       |
 
@@ -77,7 +77,7 @@ with each provider:
 
 - [Buzz Agent ACP](AGENT-PROVIDERS.md#buzz-agent-acp)
 - [Grok Build ACP](AGENT-PROVIDERS.md#grok-build-acp)
-- [OpenAI Codex app-server](AGENT-PROVIDERS.md#openai-codex-app-server-v01450)
+- [OpenAI Codex app-server](AGENT-PROVIDERS.md#openai-codex-app-server-v01620)
 - [Claude Code](AGENT-PROVIDERS.md#claude-code-v21218)
 - [GitHub Copilot CLI ACP](AGENT-PROVIDERS.md#github-copilot-cli-acp-public-preview)
 

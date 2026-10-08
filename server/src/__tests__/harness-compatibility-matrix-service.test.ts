@@ -14,7 +14,7 @@ describe('HarnessCompatibilityMatrixService', () => {
     expect(matrix).toMatchObject({
       schemaVersion: 'harness-compatibility-matrix/v1',
       generatedAt: NOW.toISOString(),
-      probeRevision: 17,
+      probeRevision: 18,
     });
     expect(matrix.records.map((record) => record.agentType)).toEqual([
       'buzz-agent',
@@ -26,7 +26,7 @@ describe('HarnessCompatibilityMatrixService', () => {
     expect(matrix.records.map((record) => record.testedVersions[0])).toEqual([
       'buzz-agent 0.1.0',
       'Grok Build 0.2.111',
-      'codex-cli 0.145.0',
+      'codex-cli 0.162.0',
       '2.1.218 (Claude Code)',
       'Copilot 1.0.74',
     ]);

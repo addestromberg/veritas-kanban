@@ -204,9 +204,9 @@ const DEFINITIONS: Record<string, ProfileDefinition> = {
     ],
     credentialAllowlist: ['CODEX_API_KEY', 'OPENAI_API_KEY'],
     testedVersions: [CODEX_APP_SERVER_CERTIFIED_VERSION],
-    documentationUrl: '/docs/AGENT-PROVIDERS.md#openai-codex-app-server-v01450',
+    documentationUrl: '/docs/AGENT-PROVIDERS.md#openai-codex-app-server-v01620',
     remediation: [
-      'Install Codex CLI v0.145.0 and run `codex login status`.',
+      'Install Codex CLI v0.162.0 and run `codex login status`.',
       'Remove custom app-server arguments; Veritas owns the strict stdio launch contract.',
     ],
   },

@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
+import { readFile, readdir } from 'node:fs/promises';
 import {
   CODEX_APP_SERVER_CERTIFIED_BUILD,
   CODEX_APP_SERVER_CERTIFIED_VERSION,
@@ -37,13 +39,14 @@ function threadStartResult(threadId = THREAD_ID) {
     modelProvider: 'openai',
     sandbox: { type: 'workspaceWrite', networkAccess: false, writableRoots: [] },
     thread: {
-      cliVersion: '0.145.0',
+      cliVersion: '0.162.0',
       createdAt: 1,
       cwd: '/tmp/worktree',
       ephemeral: false,
       id: threadId,
       modelProvider: 'openai',
       preview: 'test prompt',
+      projectId: null,
       sessionId: threadId,
       source: 'appServer',
       status: { type: 'idle' },
@@ -91,6 +94,28 @@ function parseLastWrite(writes: string[]): Record<string, unknown> {
 }
 
 describe('Codex app-server v2 provider', () => {
+  it('binds the certified build to every retained generated schema', async () => {
+    const root = new URL('../contracts/codex-app-server-v0.162.0/', import.meta.url);
+    const entries = await readdir(root, { recursive: true });
+    const files = entries
+      .filter((name) => name.endsWith('.json'))
+      .map((name) => name.replaceAll('\\', '/'))
+      .sort();
+    expect(files).toHaveLength(22);
+    const manifest = (
+      await Promise.all(
+        files.map(async (name) => {
+          const bytes = await readFile(new URL(name, root));
+          return `${createHash('sha256').update(bytes).digest('hex')}  ${name}\n`;
+        })
+      )
+    ).join('');
+    expect(CODEX_APP_SERVER_CERTIFIED_BUILD).toBe(
+      `openai/codex@c1382380de69521303b416720a52f42d51af6248;schema-set:${createHash('sha256').update(manifest).digest('hex')}`
+    );
+    expect(CODEX_APP_SERVER_CERTIFIED_VERSION).toBe('codex-cli 0.162.0');
+  });
+
   it('owns the launch surface and disables inherited extension paths', () => {
     expect(buildCodexAppServerArgs()).toEqual([
       'app-server',
@@ -174,7 +199,7 @@ describe('Codex app-server v2 provider', () => {
       method: 'initialize',
       params: {
         clientInfo: { name: 'veritas_kanban' },
-        capabilities: { experimentalApi: false },
+        capabilities: { experimentalApi: true },
       },
     });
     expect(JSON.parse(writes[1]!)).toEqual({ method: 'initialized', params: {} });
@@ -250,11 +275,33 @@ describe('Codex app-server v2 provider', () => {
       cwd: '/tmp/worktree',
       sandboxMode: 'read-only',
     });
-    const rejectedThread = expect(threadPromise).rejects.toThrow('pinned v0.145.0 schema');
+    const rejectedThread = expect(threadPromise).rejects.toThrow('pinned v0.162.0 schema');
     await expect(
       client.acceptRecord({ id: 2, result: { thread: { id: THREAD_ID } } })
-    ).rejects.toThrow('pinned v0.145.0 schema');
+    ).rejects.toThrow('pinned v0.162.0 schema');
     await rejectedThread;
+  });
+
+  it('rejects older thread and question shapes missing the 0.162 required fields', async () => {
+    const client = await initializeClient([]);
+    const thread = client.startThread({ cwd: '/tmp/worktree', sandboxMode: 'read-only' });
+    const legacyResult = threadStartResult();
+    Reflect.deleteProperty(legacyResult.thread, 'projectId');
+    const rejected = expect(thread).rejects.toThrow('pinned v0.162.0 schema');
+    await expect(client.acceptRecord({ id: 2, result: legacyResult })).rejects.toThrow(
+      'pinned v0.162.0 schema'
+    );
+    await rejected;
+    const question = {
+      id: 'legacy-question',
+      method: 'item/tool/requestUserInput',
+      params: { threadId: THREAD_ID, turnId: TURN_ID, itemId: 'question', questions: [] },
+    };
+    await expect(client.acceptRecord(question)).rejects.toThrow('pinned v0.162.0 schema');
+    await expect(
+      client.acceptRecord({ ...question, params: { ...question.params, isBlocking: true } })
+    ).resolves.toMatchObject({ kind: 'server-request' });
+    client.close();
   });
 
   it('uses exact native resume, fork, steer, compact, and archive controls', async () => {
@@ -436,6 +483,7 @@ describe('Codex app-server v2 provider', () => {
         threadId: THREAD_ID,
         turnId: TURN_ID,
         itemId: 'item-question',
+        isBlocking: true,
         questions: [
           {
             id: 'verification_gate',
@@ -577,7 +625,7 @@ describe('Codex app-server v2 provider', () => {
       protocolVersion: 'codex-app-server-jsonrpc/v2',
     });
     expect(CODEX_APP_SERVER_CERTIFIED_BUILD).toContain(
-      'openai/codex@25af12f7e61572b0bc18ddb1008be543b91519b0'
+      'openai/codex@c1382380de69521303b416720a52f42d51af6248'
     );
     expect(adapter.capabilities.find(({ id }) => id === 'run.start')?.state).toBe('supported');
     expect(adapter.capabilities.find(({ id }) => id === 'run.interrupt')?.state).toBe('supported');

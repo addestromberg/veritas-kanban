@@ -20,6 +20,34 @@ function agent(overrides: Partial<AgentConfig> = {}): AgentConfig {
 }
 
 describe('evaluateHarnessSupportStatus', () => {
+  it.each([
+    ['codex-cli 0.145.0', 'degraded', 'incompatible-build'],
+    ['codex-cli 0.161.0', 'degraded', 'incompatible-build'],
+    ['codex-cli 0.162.0', 'configured', 'none'],
+    ['codex-cli 0.163.0', 'degraded', 'incompatible-build'],
+  ] as const)('keeps the app-server version contract exact for %s', (version, tier, failure) => {
+    const candidate = agent({
+      type: 'codex-app-server',
+      name: 'OpenAI Codex app-server',
+      command: 'codex',
+      provider: 'codex-app-server',
+    });
+    expect(
+      evaluateHarnessSupportStatus(candidate, {
+        type: candidate.type,
+        name: candidate.name,
+        enabled: true,
+        configured: true,
+        command: candidate.command,
+        executableFound: true,
+        providerVersion: version,
+        authenticated: true,
+        healthy: true,
+        checkedAt: '2026-10-08T19:00:00.000Z',
+      })
+    ).toMatchObject({ supportTier: tier, failureClass: failure });
+  });
+
   it('requires exact Claude Code version evidence before treating the executable as configured', () => {
     const candidate = agent();
 

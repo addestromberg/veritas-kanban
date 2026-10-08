@@ -39,7 +39,7 @@ const INVALIDATION_KEYS = [
 const TESTED_BUILDS: Record<string, string[]> = {
   'buzz-agent': [BUZZ_AGENT_TESTED_COMMIT],
   'grok-build': [GROK_BUILD_TESTED_BUILD],
-  'codex-app-server': ['25af12f7e61572b0bc18ddb1008be543b91519b0'],
+  'codex-app-server': ['c1382380de69521303b416720a52f42d51af6248'],
   'claude-code': ['2982f951552e94f38cd972764ae94c1d90c41da3'],
   copilot: [COPILOT_ACP_TESTED_COMMIT],
 };
@@ -147,8 +147,8 @@ const REVIEWED_HARNESSES: ReviewedHarness[] = [
     [
       source(
         'Codex app-server source',
-        'https://github.com/openai/codex/tree/25af12f7e61572b0bc18ddb1008be543b91519b0',
-        '25af12f7e61572b0bc18ddb1008be543b91519b0'
+        'https://github.com/openai/codex/tree/c1382380de69521303b416720a52f42d51af6248',
+        'c1382380de69521303b416720a52f42d51af6248'
       ),
       fixture(
         'Codex app-server contract',
@@ -275,7 +275,7 @@ function buildRecord(
     platforms: [...profile.platforms],
     testedVersions: [...profile.compatibility.testedVersions],
     testedBuilds: [...(TESTED_BUILDS[reviewed.agent.type] ?? [])],
-    reviewedAt: REVIEWED_AT,
+    reviewedAt: reviewed.agent.type === 'codex-app-server' ? '2026-10-08' : REVIEWED_AT,
     sourceAvailability: reviewed.sourceAvailability,
     evidence: structuredClone(reviewed.evidence),
     capabilities: structuredClone(adapter.capabilities),

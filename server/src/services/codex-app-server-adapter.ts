@@ -7,33 +7,33 @@ import type {
   RunEventJsonValue,
   SandboxPolicyDryRunResult,
 } from '@veritas-kanban/shared';
-import applyPatchApprovalResponseSchema from '../contracts/codex-app-server-v0.145.0/ApplyPatchApprovalResponse.json' with { type: 'json' };
-import clientNotificationSchema from '../contracts/codex-app-server-v0.145.0/ClientNotification.json' with { type: 'json' };
-import clientRequestSchema from '../contracts/codex-app-server-v0.145.0/ClientRequest.json' with { type: 'json' };
-import commandExecutionRequestApprovalResponseSchema from '../contracts/codex-app-server-v0.145.0/CommandExecutionRequestApprovalResponse.json' with { type: 'json' };
-import execCommandApprovalResponseSchema from '../contracts/codex-app-server-v0.145.0/ExecCommandApprovalResponse.json' with { type: 'json' };
-import fileChangeRequestApprovalResponseSchema from '../contracts/codex-app-server-v0.145.0/FileChangeRequestApprovalResponse.json' with { type: 'json' };
-import jsonRpcErrorSchema from '../contracts/codex-app-server-v0.145.0/JSONRPCError.json' with { type: 'json' };
-import jsonRpcResponseSchema from '../contracts/codex-app-server-v0.145.0/JSONRPCResponse.json' with { type: 'json' };
-import mcpServerElicitationRequestResponseSchema from '../contracts/codex-app-server-v0.145.0/McpServerElicitationRequestResponse.json' with { type: 'json' };
-import permissionsRequestApprovalResponseSchema from '../contracts/codex-app-server-v0.145.0/PermissionsRequestApprovalResponse.json' with { type: 'json' };
-import serverNotificationSchema from '../contracts/codex-app-server-v0.145.0/ServerNotification.json' with { type: 'json' };
-import serverRequestSchema from '../contracts/codex-app-server-v0.145.0/ServerRequest.json' with { type: 'json' };
-import toolRequestUserInputResponseSchema from '../contracts/codex-app-server-v0.145.0/ToolRequestUserInputResponse.json' with { type: 'json' };
-import initializeResponseSchema from '../contracts/codex-app-server-v0.145.0/v1/InitializeResponse.json' with { type: 'json' };
-import threadArchiveResponseSchema from '../contracts/codex-app-server-v0.145.0/v2/ThreadArchiveResponse.json' with { type: 'json' };
-import threadCompactStartResponseSchema from '../contracts/codex-app-server-v0.145.0/v2/ThreadCompactStartResponse.json' with { type: 'json' };
-import threadForkResponseSchema from '../contracts/codex-app-server-v0.145.0/v2/ThreadForkResponse.json' with { type: 'json' };
-import threadResumeResponseSchema from '../contracts/codex-app-server-v0.145.0/v2/ThreadResumeResponse.json' with { type: 'json' };
-import threadStartResponseSchema from '../contracts/codex-app-server-v0.145.0/v2/ThreadStartResponse.json' with { type: 'json' };
-import turnInterruptResponseSchema from '../contracts/codex-app-server-v0.145.0/v2/TurnInterruptResponse.json' with { type: 'json' };
-import turnStartResponseSchema from '../contracts/codex-app-server-v0.145.0/v2/TurnStartResponse.json' with { type: 'json' };
-import turnSteerResponseSchema from '../contracts/codex-app-server-v0.145.0/v2/TurnSteerResponse.json' with { type: 'json' };
+import applyPatchApprovalResponseSchema from '../contracts/codex-app-server-v0.162.0/ApplyPatchApprovalResponse.json' with { type: 'json' };
+import clientNotificationSchema from '../contracts/codex-app-server-v0.162.0/ClientNotification.json' with { type: 'json' };
+import clientRequestSchema from '../contracts/codex-app-server-v0.162.0/ClientRequest.json' with { type: 'json' };
+import commandExecutionRequestApprovalResponseSchema from '../contracts/codex-app-server-v0.162.0/CommandExecutionRequestApprovalResponse.json' with { type: 'json' };
+import execCommandApprovalResponseSchema from '../contracts/codex-app-server-v0.162.0/ExecCommandApprovalResponse.json' with { type: 'json' };
+import fileChangeRequestApprovalResponseSchema from '../contracts/codex-app-server-v0.162.0/FileChangeRequestApprovalResponse.json' with { type: 'json' };
+import jsonRpcErrorSchema from '../contracts/codex-app-server-v0.162.0/JSONRPCError.json' with { type: 'json' };
+import jsonRpcResponseSchema from '../contracts/codex-app-server-v0.162.0/JSONRPCResponse.json' with { type: 'json' };
+import mcpServerElicitationRequestResponseSchema from '../contracts/codex-app-server-v0.162.0/McpServerElicitationRequestResponse.json' with { type: 'json' };
+import permissionsRequestApprovalResponseSchema from '../contracts/codex-app-server-v0.162.0/PermissionsRequestApprovalResponse.json' with { type: 'json' };
+import serverNotificationSchema from '../contracts/codex-app-server-v0.162.0/ServerNotification.json' with { type: 'json' };
+import serverRequestSchema from '../contracts/codex-app-server-v0.162.0/ServerRequest.json' with { type: 'json' };
+import toolRequestUserInputResponseSchema from '../contracts/codex-app-server-v0.162.0/ToolRequestUserInputResponse.json' with { type: 'json' };
+import initializeResponseSchema from '../contracts/codex-app-server-v0.162.0/v1/InitializeResponse.json' with { type: 'json' };
+import threadArchiveResponseSchema from '../contracts/codex-app-server-v0.162.0/v2/ThreadArchiveResponse.json' with { type: 'json' };
+import threadCompactStartResponseSchema from '../contracts/codex-app-server-v0.162.0/v2/ThreadCompactStartResponse.json' with { type: 'json' };
+import threadForkResponseSchema from '../contracts/codex-app-server-v0.162.0/v2/ThreadForkResponse.json' with { type: 'json' };
+import threadResumeResponseSchema from '../contracts/codex-app-server-v0.162.0/v2/ThreadResumeResponse.json' with { type: 'json' };
+import threadStartResponseSchema from '../contracts/codex-app-server-v0.162.0/v2/ThreadStartResponse.json' with { type: 'json' };
+import turnInterruptResponseSchema from '../contracts/codex-app-server-v0.162.0/v2/TurnInterruptResponse.json' with { type: 'json' };
+import turnStartResponseSchema from '../contracts/codex-app-server-v0.162.0/v2/TurnStartResponse.json' with { type: 'json' };
+import turnSteerResponseSchema from '../contracts/codex-app-server-v0.162.0/v2/TurnSteerResponse.json' with { type: 'json' };
 import { buildSafeCodexEnv } from '../utils/codex-env.js';
 
-export const CODEX_APP_SERVER_CERTIFIED_VERSION = 'codex-cli 0.145.0';
+export const CODEX_APP_SERVER_CERTIFIED_VERSION = 'codex-cli 0.162.0';
 export const CODEX_APP_SERVER_CERTIFIED_BUILD =
-  'openai/codex@25af12f7e61572b0bc18ddb1008be543b91519b0;schema-set:b59f4df6df8d00b3e665b533416efcfef9b5530bcd22a1e4a15dfe7bbd3a8624';
+  'openai/codex@c1382380de69521303b416720a52f42d51af6248;schema-set:c8d3faa751240e2eeb19b7a84b3ac66365eba6f99dc3f6c79b6411e6cfddaae5';
 export const CODEX_APP_SERVER_PROTOCOL_VERSION = 'codex-app-server-jsonrpc/v2';
 export const CODEX_APP_SERVER_MAX_RECORD_BYTES = 4 * 1024 * 1024;
 export const CODEX_APP_SERVER_OVERLOAD_ERROR = -32_001;
@@ -338,7 +338,10 @@ export class CodexAppServerRpcClient {
         version: '1.0.0',
       },
       capabilities: {
-        experimentalApi: false,
+        // Forks must suppress automatic goal continuation before Veritas binds
+        // the new runtime. The pinned deferGoalContinuation field is gated by
+        // Codex 0.162.0; this opt-in does not expand our outbound method allowlist.
+        experimentalApi: true,
         mcpServerOpenaiFormElicitation: false,
       },
     });
@@ -901,7 +904,7 @@ function validateWithSchema(
     .slice(0, 3)
     .map((error) => `${error.instancePath || '/'} ${error.keyword}`)
     .join(', ');
-  throw new Error(`${label} failed the pinned v0.145.0 schema${detail ? `: ${detail}` : '.'}`);
+  throw new Error(`${label} failed the pinned v0.162.0 schema${detail ? `: ${detail}` : '.'}`);
 }
 
 function requiredNestedIdentifier(

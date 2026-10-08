@@ -361,13 +361,13 @@ Do not run `npm install`, `yarn`, or `bun install`. If lockfile conflicts arise,
 
 - `codex-cli`: `codex exec --sandbox workspace-write --json`
 - `codex-sdk`: programmatic SDK, requires `@openai/codex-sdk`
-- `codex-app-server`: pinned to `codex-cli 0.145.0`; supervised JSON-RPC v2 over
+- `codex-app-server`: pinned to `codex-cli 0.162.0`; supervised JSON-RPC v2 over
   strict stdio for one task-bound thread and turn.
 - App-server launch arguments are system-owned. Inherited MCP servers, hooks,
   plugins, apps, browser/computer tools, and remote control remain disabled.
   Selected run-scoped MCP servers are injected only through the immutable
   catalog's thread configuration.
-- App-server consumes only the checked-in v0.145.0 schemas and exposes
+- App-server consumes only the checked-in v0.162.0 schemas and exposes
   `initialize`, thread start/resume/fork/compact/archive, and turn
   start/steer/interrupt. `thread/shellCommand` is never reachable.
 - `conversation-lifecycle/v1` persists opaque thread, turn, item, parent, and
