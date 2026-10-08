@@ -194,7 +194,18 @@ function codexMapper(
     },
     mapEvent(providerType, event, summary) {
       const identity = eventIdentity(event);
-      const kind = itemKind(providerType, event);
+      // These pinned app-server notifications report lifecycle metadata, not
+      // provider errors. Keep them out of the watchdog's unknown-error bucket.
+      const kind =
+        provider === 'codex-app-server' &&
+        [
+          'remoteControl/status/changed',
+          'account/updated',
+          'account/rateLimits/updated',
+          'thread/status/changed',
+        ].includes(providerType)
+          ? 'progress'
+          : itemKind(providerType, event);
       return {
         ...identity,
         kind,

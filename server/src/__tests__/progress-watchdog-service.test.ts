@@ -9,6 +9,7 @@ import {
   DEFAULT_PROGRESS_WATCHDOG_POLICY,
   ProgressWatchdogService,
 } from '../services/progress-watchdog-service.js';
+import { getProviderRunEventMapper } from '../services/provider-run-event-mappers.js';
 
 function event(
   sequence: number,
@@ -59,6 +60,25 @@ function policy(overrides: Partial<ProgressWatchdogPolicy> = {}): ProgressWatchd
 }
 
 describe('ProgressWatchdogService', () => {
+  it('does not treat app-server startup metadata as identical provider errors', () => {
+    const mapper = getProviderRunEventMapper('codex-app-server');
+    const notifications = [
+      ['remoteControl/status/changed', { status: 'disabled' }],
+      ['account/updated', { authMode: 'chatgpt', planType: null }],
+      ['thread/status/changed', { threadId: 'thread_1', status: { type: 'active' } }],
+      ['account/rateLimits/updated', { rateLimits: {} }],
+    ] as const;
+    const events = notifications.map(([method, params], index) => {
+      const mapped = mapper.mapEvent(method, params);
+      expect(mapped.kind).toBe('progress');
+      return event(index + 1, mapped.kind, mapped.payload as Record<string, RunEventJsonValue>, {
+        provider: 'codex-app-server',
+      });
+    });
+    expect(new ProgressWatchdogService().evaluate({ events }).findings).toEqual([]);
+    expect(mapper.mapEvent('future.failure', { code: 'unknown' }).kind).toBe('provider.unknown');
+  });
+
   it('detects identical redacted tool fingerprints without persisting arguments', () => {
     const service = new ProgressWatchdogService();
     const events = [1, 2, 3].map((sequence) =>
