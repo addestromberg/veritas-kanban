@@ -130,6 +130,12 @@ export class ProgressWatchdogCoordinatorService {
       state.events = state.events.slice(-MAX_ATTEMPT_BUFFER_EVENTS);
     }
 
+    // Terminal usage can be large even after a productive read-only turn. The
+    // provider has already ended its turn; completion owns the remaining checks.
+    // Rehydrating the terminal event also prevents late usage from stopping a
+    // completed attempt after restart. Keep normal in-flight detection enabled.
+    if (state.events.some(isProviderTerminalEvent)) return;
+
     const evaluatedAt = state.events.at(-1)?.receivedAt ?? event.receivedAt;
     const initial = this.evaluator.evaluate({
       events: state.events,
@@ -261,6 +267,15 @@ export class ProgressWatchdogCoordinatorService {
       actions,
     };
   }
+}
+
+function isProviderTerminalEvent(event: RunEventEnvelope): boolean {
+  if (['run.completed', 'run.failed', 'run.interrupted'].includes(event.kind)) return true;
+  return (
+    ['codex-cli', 'codex-sdk'].includes(event.source.provider) &&
+    event.kind === 'progress' &&
+    ['turn.completed', 'turn.failed'].includes(String(event.payload.providerType))
+  );
 }
 
 function recoveryUsage(

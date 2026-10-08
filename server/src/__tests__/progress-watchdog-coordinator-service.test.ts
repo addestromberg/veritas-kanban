@@ -69,6 +69,74 @@ async function events(journal: RunEventJournalService) {
 }
 
 describe('ProgressWatchdogCoordinatorService', () => {
+  it('leaves terminal Codex usage to completion without interrupting the provider', async () => {
+    const execute = vi.fn(async (_finding: ProgressWatchdogFinding) => ({
+      status: 'executed' as const,
+      diagnostic: 'Recovery requested.',
+    }));
+    const { coordinator, journal } = await harness({ executor: { execute } });
+    for (let sequence = 1; sequence <= 20; sequence += 1) {
+      await journal.append(toolEvent(sequence));
+      await coordinator.flush();
+    }
+    await journal.append({
+      ...toolEvent(21),
+      kind: 'progress',
+      payload: { providerType: 'turn.completed' },
+    });
+    await journal.append({
+      ...toolEvent(22),
+      kind: 'usage.updated',
+      payload: { totalTokens: 437_313 },
+    });
+    await coordinator.flush();
+    expect(execute).not.toHaveBeenCalled();
+    expect(
+      (await events(journal)).some((event) => event.kind === 'progress.watchdog.finding')
+    ).toBe(false);
+
+    coordinator.stop();
+    const restarted = new ProgressWatchdogCoordinatorService({
+      journal,
+      executor: { execute },
+    });
+    restarted.start();
+    await journal.append({
+      ...toolEvent(23),
+      kind: 'usage.updated',
+      payload: { totalTokens: 437_313, source: 'run-completion' },
+    });
+    await restarted.flush();
+    expect(execute).not.toHaveBeenCalled();
+    restarted.stop();
+  });
+
+  it('still pauses high token use while a provider turn is active', async () => {
+    const execute = vi.fn(async (_finding: ProgressWatchdogFinding) => ({
+      status: 'executed' as const,
+      diagnostic: 'Recovery requested.',
+    }));
+    const { coordinator, journal } = await harness({ executor: { execute } });
+    for (let sequence = 1; sequence <= 20; sequence += 1) {
+      await journal.append(toolEvent(sequence));
+      await coordinator.flush();
+    }
+    await journal.append({
+      ...toolEvent(21),
+      kind: 'usage.updated',
+      payload: { totalTokens: 437_313 },
+    });
+    await coordinator.flush();
+    expect(execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detector: 'no-durable-progress',
+        confidence: 'high',
+        action: 'pause',
+      })
+    );
+    coordinator.stop();
+  });
+
   it('journals an attributed finding and executes its bounded action once', async () => {
     const execute = vi.fn(async (_finding: ProgressWatchdogFinding) => ({
       status: 'executed' as const,
